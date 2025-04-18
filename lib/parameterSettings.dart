@@ -39,6 +39,7 @@ class _ParameterSettingsState extends State<ParameterSettings> {
   StreamSubscription<List<int>>?
       _dataSubscription; // Subscription to listen for data
   final Set<String> _receivedKeys = {}; // Track received keys
+  bool isLoading = false; // Add loading state variable
 
   @override
   void initState() {
@@ -53,152 +54,178 @@ class _ParameterSettingsState extends State<ParameterSettings> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      body: Container(
-        height: 100.h,
-        color: AppColours.bgColor,
-        width: 100.w,
-        child: Padding(
-            padding: EdgeInsets.only(top: 9.h, left: 5.w, right: 5.w),
-            child: SingleChildScrollView(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Row(
+      body: Stack(
+        children: [
+          Container(
+            height: 100.h,
+            color: AppColours.bgColor,
+            width: 100.w,
+            child: Padding(
+                padding: EdgeInsets.only(top: 9.h, left: 5.w, right: 5.w),
+                child: SingleChildScrollView(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      GestureDetector(
-                          onTap: () {
-                            Navigator.pushAndRemoveUntil(
-                              context,
-                              MaterialPageRoute(
-                                  builder: (context) => Settting()),
-                              (Route<dynamic> route) =>
-                                  false, // This will remove all previous routes
-                            );
-                          },
-                          child: SvgPicture.asset(
-                            AppIcons.left,
-                            color: AppColours.primaryColor,
-                            height: 3.h,
-                            width: 4.w,
-                          )),
-                      SizedBox(
-                        width: 7.w,
+                      Row(
+                        children: [
+                          GestureDetector(
+                              onTap: () {
+                                Navigator.pushAndRemoveUntil(
+                                  context,
+                                  MaterialPageRoute(
+                                      builder: (context) => Settting()),
+                                  (Route<dynamic> route) =>
+                                      false, // This will remove all previous routes
+                                );
+                              },
+                              child: SvgPicture.asset(
+                                AppIcons.left,
+                                color: AppColours.primaryColor,
+                                height: 3.h,
+                                width: 4.w,
+                              )),
+                          SizedBox(
+                            width: 7.w,
+                          ),
+                          CustomizeText(
+                              text: 'Parameter Settings',
+                              fontSize: 14,
+                              fontWeight: FontWeight.w700,
+                              textColor: AppColours.primaryColor),
+                        ],
                       ),
-                      CustomizeText(
-                          text: 'Parameter Settings',
-                          fontSize: 14,
-                          fontWeight: FontWeight.w700,
-                          textColor: AppColours.primaryColor),
-                    ],
-                  ),
-                  SizedBox(
-                    height: 5.h,
-                  ),
-                  Container(
-                    padding: EdgeInsets.only(left: 4.w, right: 4.w),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        buildRow(context, "Min Temperature", AppIcons.minTemp,
-                            minTemp),
-                        SizedBox(
-                          height: 2.5.h,
-                        ),
-                        buildRow(context, "Max Temperature", AppIcons.maxTemp,
-                            maxTemp),
-                        SizedBox(
-                          height: 2.5.h,
-                        ),
-                        buildRow(context, "Soll Temperature",
-                            AppIcons.soll_icon, sollTemp),
-                        SizedBox(
-                          height: 2.5.h,
-                        ),
-                        buildRow(context, "Hysteresis", AppIcons.hystersis,
-                            hysteresis),
-                        SizedBox(
-                          height: 2.5.h,
-                        ),
-                        buildRow(context, "Servo Max Position",
-                            AppIcons.servoMax, servoMaxPosition),
-                        SizedBox(
-                          height: 2.5.h,
-                        ),
-                        buildRow(context, "Servo Min Position",
-                            AppIcons.servoMin, servoMinPosition),
-                        SizedBox(
-                          height: 2.5.h,
-                        ),
-                        buildRow(context, "Servo Steps", AppIcons.servoSteps,
-                            servoSteps),
-                        SizedBox(
-                          height: 2.5.h,
-                        ),
-                        CustomizeText(
-                            text: 'Date',
-                            fontSize: 12.5,
-                            fontWeight: FontWeight.w700,
-                            textColor: AppColours.primaryColor),
-                        SizedBox(
-                          height: 1.5.h,
-                        ),
-                        CustomizeText(
-                            text: selectedDate != null
-                                ? 'Picked Date: ${selectedDate!.toLocal().toString().split(' ')[0]}'
-                                : 'No date picked',
-                            fontSize: 12,
-                            fontWeight: FontWeight.normal,
-                            textColor: AppColours.primaryColor),
-                        SizedBox(
-                          height: 1.5.h,
-                        ),
-                        GestureDetector(
-                          onTap: () {
-                            pickDate(context);
-                          },
-                          child: Row(
-                            children: [
-                              SvgPicture.asset(
-                                AppIcons.date,
-                                color: AppColours.btnColor,
-                              ),
-                              SizedBox(
-                                width: 3.w,
-                              ),
-                              CustomizeText(
-                                text: 'Picked Date',
+                      SizedBox(
+                        height: 5.h,
+                      ),
+                      Container(
+                        padding: EdgeInsets.only(left: 4.w, right: 4.w),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            buildRow(context, "Min Temperature",
+                                AppIcons.minTemp, minTemp),
+                            SizedBox(
+                              height: 2.5.h,
+                            ),
+                            buildRow(context, "Max Temperature",
+                                AppIcons.maxTemp, maxTemp),
+                            SizedBox(
+                              height: 2.5.h,
+                            ),
+                            buildRow(context, "Soll Temperature",
+                                AppIcons.soll_icon, sollTemp),
+                            SizedBox(
+                              height: 2.5.h,
+                            ),
+                            buildRow(context, "Hysteresis", AppIcons.hystersis,
+                                hysteresis),
+                            SizedBox(
+                              height: 2.5.h,
+                            ),
+                            buildRow(context, "Servo Max Position",
+                                AppIcons.servoMax, servoMaxPosition),
+                            SizedBox(
+                              height: 2.5.h,
+                            ),
+                            buildRow(context, "Servo Min Position",
+                                AppIcons.servoMin, servoMinPosition),
+                            SizedBox(
+                              height: 2.5.h,
+                            ),
+                            buildRow(context, "Servo Steps",
+                                AppIcons.servoSteps, servoSteps),
+                            SizedBox(
+                              height: 2.5.h,
+                            ),
+                            CustomizeText(
+                                text: 'Date',
+                                fontSize: 12.5,
+                                fontWeight: FontWeight.w700,
+                                textColor: AppColours.primaryColor),
+                            SizedBox(
+                              height: 1.5.h,
+                            ),
+                            CustomizeText(
+                                text: selectedDate != null
+                                    ? 'Picked Date: ${selectedDate!.toLocal().toString().split(' ')[0]}'
+                                    : 'No date picked',
                                 fontSize: 12,
                                 fontWeight: FontWeight.normal,
-                                textColor: AppColours.btnColor,
-                                textDecoration: TextDecoration.underline,
-                                decorationColor: AppColours.btnColor,
+                                textColor: AppColours.primaryColor),
+                            SizedBox(
+                              height: 1.5.h,
+                            ),
+                            GestureDetector(
+                              onTap: () {
+                                pickDate(context);
+                              },
+                              child: Row(
+                                children: [
+                                  SvgPicture.asset(
+                                    AppIcons.date,
+                                    color: AppColours.btnColor,
+                                  ),
+                                  SizedBox(
+                                    width: 3.w,
+                                  ),
+                                  CustomizeText(
+                                    text: 'Picked Date',
+                                    fontSize: 12,
+                                    fontWeight: FontWeight.normal,
+                                    textColor: AppColours.btnColor,
+                                    textDecoration: TextDecoration.underline,
+                                    decorationColor: AppColours.btnColor,
+                                  ),
+                                ],
                               ),
-                            ],
-                          ),
+                            ),
+                            SizedBox(
+                              height: 10.h,
+                            ),
+                            CustomButtons(
+                              width: 100.w,
+                              outlineColor: AppColours.btnColor,
+                              textColor: Colors.white,
+                              onPressed: () {
+                                if (isConnect) {
+                                  onSendButtonPressed(); // Call the updated method to send data one by one
+                                } else {
+                                  Utils().toastMsg("Device not connected");
+                                }
+                              },
+                              text: "Submit",
+                              btnColor: AppColours.btnColor,
+                            )
+                          ],
                         ),
-                        SizedBox(
-                          height: 10.h,
-                        ),
-                        CustomButtons(
-                          width: 100.w,
-                          outlineColor: AppColours.btnColor,
-                          textColor: Colors.white,
-                          onPressed: () {
-                            if (isConnect) {
-                              onSendButtonPressed(); // Call the updated method to send data one by one
-                            } else {
-                              Utils().toastMsg("Device not connected");
-                            }
-                          },
-                          text: "Submit",
-                          btnColor: AppColours.btnColor,
-                        )
-                      ],
-                    ),
+                      ),
+                    ],
                   ),
-                ],
+                )),
+          ),
+          if (isLoading)
+            Container(
+              color: Colors.black.withOpacity(0.5),
+              child: Center(
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    CircularProgressIndicator(
+                      color: AppColours.btnColor,
+                    ),
+                    SizedBox(height: 20),
+                    Text(
+                      "Submitting data...",
+                      style: TextStyle(
+                          color: Colors.white,
+                          fontSize: 16,
+                          fontWeight: FontWeight.bold),
+                    )
+                  ],
+                ),
               ),
-            )),
+            ),
+        ],
       ),
     );
   }
@@ -238,6 +265,16 @@ class _ParameterSettingsState extends State<ParameterSettings> {
   }
 
   void onSendButtonPressed() async {
+    // Validate inputs before sending
+    if (!validateInputs()) {
+      Utils().toastMsg("Please fix invalid input values before submitting");
+      return;
+    }
+
+    setState(() {
+      isLoading = true; // Show loading indicator
+    });
+
     List<String> dataToSend = [
       'minT:${minTemp.text}',
       'maxT:${maxTemp.text}',
@@ -255,15 +292,81 @@ class _ParameterSettingsState extends State<ParameterSettings> {
       }
     }
 
-    saveInputValuesToSharedPreferences(); // Save input values when the submit button is clicked
-    saveDateToSharedPreferences(); // Save date when the submit button is clicked
+    saveInputValuesToSharedPreferences();
+    saveDateToSharedPreferences();
+
+    setState(() {
+      isLoading = false; // Hide loading indicator
+    });
+
     Utils().toastMsg("Data submitted successfully");
+  }
+
+  // Updated validation function with better error messages
+  bool validateInputs() {
+    bool isValid = true;
+    String errorMsg = "";
+
+    // Check if date is selected
+    if (selectedDate == null) {
+      errorMsg = "Please select a date";
+      isValid = false;
+    }
+
+    // Validate temperature fields and hysteresis (-999 to 999)
+    if (!validateRange(minTemp.text, -999, 999)) {
+      errorMsg = "Min Temperature must be between -999 and 999";
+      isValid = false;
+    } else if (!validateRange(maxTemp.text, -999, 999)) {
+      errorMsg = "Max Temperature must be between -999 and 999";
+      isValid = false;
+    } else if (!validateRange(sollTemp.text, -999, 999)) {
+      errorMsg = "Soll Temperature must be between -999 and 999";
+      isValid = false;
+    } else if (!validateRange(hysteresis.text, -999, 999)) {
+      errorMsg = "Hysteresis must be between -999 and 999";
+      isValid = false;
+    }
+    // Validate servo positions and steps (-360 to 360)
+    else if (!validateRange(servoMaxPosition.text, -360, 360)) {
+      errorMsg = "Servo Max Position must be between -360 and 360";
+      isValid = false;
+    } else if (!validateRange(servoMinPosition.text, -360, 360)) {
+      errorMsg = "Servo Min Position must be between -360 and 360";
+      isValid = false;
+    } else if (!validateRange(servoSteps.text, -360, 360)) {
+      errorMsg = "Servo Steps must be between -360 and 360";
+      isValid = false;
+    }
+
+    // Show error message if validation fails
+    if (!isValid && errorMsg.isNotEmpty) {
+      Utils().toastMsg(errorMsg);
+    }
+
+    return isValid;
+  }
+
+  // Helper method to validate number range
+  bool validateRange(String value, int min, int max) {
+    if (value.isEmpty) {
+      return false; // Empty field is invalid
+    }
+
+    try {
+      // Use double.parse instead of int.parse to support decimal values
+      double numValue = double.parse(value);
+      return numValue >= min && numValue <= max;
+    } catch (e) {
+      print("Validation error: $e");
+      return false; // Cannot parse as number
+    }
   }
 
   Future<void> writeDataToDevice(String field) async {
     const int maxChunkSize = 20; // Maximum allowed size for BLE
     const Duration delayBetweenSends =
-        Duration(milliseconds: 3000); // Optional delay
+        Duration(milliseconds: 0); // Optional delay
 
     try {
       // Convert the field to bytes and add a newline at the end
@@ -320,6 +423,9 @@ class _ParameterSettingsState extends State<ParameterSettings> {
   Future<void> loadInputValuesFromDevice() async {
     try {
       if (bluetoothProvider.readCharacteristic != null) {
+        // Show loading indicator or message
+        Utils().toastMsg("Fetching parameters from device...");
+
         // Enable notifications for the characteristic
         await bluetoothProvider.readCharacteristic?.setNotifyValue(true);
 
@@ -406,6 +512,14 @@ class _ParameterSettingsState extends State<ParameterSettings> {
                 print("Unknown key: $key");
             }
           });
+
+          // Print debug info for each received value
+          print("Set $key to $value");
+
+          // Check if all expected data has been received
+          if (_receivedKeys.length == 8) {
+            Utils().toastMsg("All parameter data loaded from device");
+          }
         }
       }
     } catch (e) {
@@ -459,7 +573,8 @@ class _ParameterSettingsState extends State<ParameterSettings> {
           child: Center(
             child: TextField(
               controller: controller,
-              keyboardType: TextInputType.number,
+              keyboardType: TextInputType.numberWithOptions(
+                  decimal: true), // Allow decimals
               maxLength: 6,
               textAlign: TextAlign.center,
               decoration: InputDecoration(
@@ -471,11 +586,6 @@ class _ParameterSettingsState extends State<ParameterSettings> {
                         ? "0 to 360"
                         : "-999 to 999",
               ),
-              inputFormatters: [
-                FilteringTextInputFormatter.allow(RegExp(name.contains("Servo")
-                    ? r'^-?(360|[1-9]?[0-9]|[1-2][0-9]{2}|3[0-5][0-9])$'
-                    : r'^-?\d{0,3}$')),
-              ],
             ),
           ),
         ),
